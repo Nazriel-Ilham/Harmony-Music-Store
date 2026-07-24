@@ -37,19 +37,19 @@ cd harmony-music-store
 Install dependency
 
 ```bash
-npm install
+pnpm install
 ```
 
 Menjalankan project
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Build Production
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ## Struktur Folder
