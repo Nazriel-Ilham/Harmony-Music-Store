@@ -86,6 +86,15 @@ const handleLogout = async () => {
             </span>
           </NuxtLink>
         </li>
+        <li>
+          <NuxtLink
+            to="/pesanan"
+            class="transition hover:text-blue-700"
+            active-class="text-blue-700 font-bold"
+          >
+            Pesanan Saya
+          </NuxtLink>
+        </li>
 
         <!-- User Profile & Auth Button -->
         <li class="ml-2 flex items-center">

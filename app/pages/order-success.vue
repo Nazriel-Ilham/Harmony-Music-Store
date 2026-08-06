@@ -1,35 +1,52 @@
-<script setup></script>
+<script setup>
+const router = useRouter();
+</script>
+
 <template>
   <section
-    class="flex min-h-screen items-center justify-center bg-gray-50 px-6"
+    class="bg-gray-50 py-20 min-h-[80vh] flex items-center justify-center"
   >
-    <div class="max-w-lg rounded-2xl bg-white p-10 text-center shadow-lg">
+    <div
+      class="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg text-center mx-4"
+    >
+      <!-- Icon Sukses -->
       <div
-        class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-green-100"
+        class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6"
       >
-        <span class="text-5xl text-green-600">✓</span>
+        <svg
+          class="h-10 w-10 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
       </div>
 
-      <h1 class="mt-8 text-4xl font-bold">Pesanan Berhasil!</h1>
-
-      <p class="mt-4 leading-7 text-gray-600">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Pesanan Berhasil!</h1>
+      <p class="text-gray-600 mb-8">
         Terima kasih telah berbelanja di Harmony Music Store. Pesanan Anda
-        sedang diproses dan akan segera kami kirim.
+        sedang diproses oleh tim kami.
       </p>
 
-      <div class="mt-10 flex flex-col gap-4">
+      <div class="space-y-3">
         <NuxtLink
-          to="/produk"
-          class="rounded-xl bg-blue-700 py-4 font-semibold text-white transition hover:bg-blue-800"
+          to="/pesanan"
+          class="block w-full bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-800 transition"
         >
-          Belanja Lagi
+          Lihat Riwayat Pesanan
         </NuxtLink>
 
         <NuxtLink
-          to="/"
-          class="rounded-xl border border-gray-300 py-4 font-semibold transition hover:bg-gray-100"
+          to="/produk"
+          class="block w-full border border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-xl hover:bg-gray-50 transition"
         >
-          Kembali ke Beranda
+          Lanjut Belanja
         </NuxtLink>
       </div>
     </div>

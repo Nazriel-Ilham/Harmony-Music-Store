@@ -1,121 +1,68 @@
 <script setup>
-import { computed, ref, onMounted } from "vue";
+const route = useRoute();
+const supabase = useSupabaseClient();
 
-// Mengaktifkan proteksi middleware auth
-definePageMeta({
-  middleware: ["auth"],
-});
-
-// Integrasi Supabase
-const client = useSupabaseClient();
-const user = useSupabaseUser();
-const router = useRouter();
-
+const selectedCategory = ref(route.query.category || "Semua");
 const products = ref([]);
 const pending = ref(true);
 
-// Mengambil data produk dari database Supabase
 const fetchProducts = async () => {
   pending.value = true;
-  // Menambahkan .order() agar produk terbaru berada di posisi paling atas
-  const { data, error } = await client
-    .from("products")
-    .select("*")
-    .order("id", { ascending: false });
+  let query = supabase.from("products").select("*");
 
-  if (!error && data) {
-    products.value = data;
+  // Jika ada kategori terpilih dan bukan "Semua"
+  if (selectedCategory.value && selectedCategory.value !== "Semua") {
+    query = query.eq("category", selectedCategory.value);
   }
+
+  const { data, error } = await query;
+  if (!error) products.value = data || [];
   pending.value = false;
 };
 
-onMounted(() => {
-  fetchProducts();
-});
-
-// Fitur Logout
-const logout = async () => {
-  await client.auth.signOut();
-  router.push("/login");
-};
-
-// Logika Search, Sort & Filter kamu sebelumnya
-const search = ref("");
-const sortBy = ref("default");
-const selectedCategory = ref("Semua");
-
-const categories = ["Semua", "Gitar", "Keyboard", "Drum", "Biola"];
-
-const filteredProducts = computed(() => {
-  let result = [...products.value];
-
-  if (search.value.trim()) {
-    result = result.filter((product) =>
-      product.name.toLowerCase().includes(search.value.toLowerCase()),
-    );
-  }
-
-  if (selectedCategory.value !== "Semua") {
-    result = result.filter(
-      (product) => product.category === selectedCategory.value,
-    );
-  }
-
-  switch (sortBy.value) {
-    case "name":
-      result.sort((a, b) => a.name.localeCompare(b.name));
-      break;
-    case "low":
-      result.sort((a, b) => a.price - b.price);
-      break;
-    case "high":
-      result.sort((a, b) => b.price - a.price);
-      break;
-  }
-
-  return result;
-});
+// Pantau perubahan query parameter di URL
+watch(
+  () => route.query.category,
+  (newCategory) => {
+    selectedCategory.value = newCategory || "Semua";
+    fetchProducts();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <section class="bg-gray-50 py-10 min-h-screen">
+  <section class="bg-gray-50 py-12">
     <div class="mx-auto max-w-7xl px-6">
-      <!-- Topbar Info User & Logout -->
-      <div
-        class="flex justify-between items-center mb-8 pb-4 border-b border-gray-200"
-      >
-        <div>
-          <p v-if="user" class="text-sm text-gray-600">
-            Selamat datang,
-            <span class="font-bold text-indigo-600">{{ user.email }}</span>
-          </p>
-        </div>
-        <div>
-          <button
-            @click="logout"
-            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-          >
-            Logout
-          </button>
-        </div>
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold">
+          Daftar Produk
+          {{ selectedCategory !== "Semua" ? `- ${selectedCategory}` : "" }}
+        </h1>
+
+        <!-- Tombol Reset Filter jika sedang memfilter -->
+        <NuxtLink
+          v-if="selectedCategory !== 'Semua'"
+          to="/produk"
+          class="text-sm font-semibold text-blue-600 hover:underline"
+        >
+          Lihat Semua Produk
+        </NuxtLink>
       </div>
 
-      <h1 class="text-5xl font-bold">Produk Kami</h1>
-      <p class="mt-4 text-gray-500">
-        Temukan alat musik favoritmu dari Database Supabase.
-      </p>
+      <div v-if="pending" class="text-center py-12 text-gray-500">
+        Memuat produk...
+      </div>
 
-      <!-- Component Search, Sort & Filter milikmu -->
-      <ProductSearch v-model="search" />
-      <ProductSort v-model="sortBy" />
-      <ProductFilter v-model="selectedCategory" :categories="categories" />
+      <div
+        v-else-if="products.length > 0"
+        class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+      >
+        <ProductCard v-for="item in products" :key="item.id" :product="item" />
+      </div>
 
-      <!-- Daftar Produk dari Database -->
-      <div class="mt-10">
-        <div v-if="pending" class="text-center py-10 text-gray-500">
-          Memuat data dari database Supabase...
-        </div>
-        <ProductGrid v-else :products="filteredProducts" />
+      <div v-else class="text-center py-12 text-gray-500">
+        Tidak ada produk untuk kategori {{ selectedCategory }}.
       </div>
     </div>
   </section>
