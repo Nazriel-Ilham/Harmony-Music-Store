@@ -12,4 +12,15 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+
+  modules: ["@nuxtjs/supabase"],
+
+  supabase: {
+    redirectOptions: {
+      login: "/login",
+      callback: "/",
+      exclude: ["/register"], // <--- TAMBAHKAN INI agar /register tidak dicegat oleh Supabase
+    },
+    types: false,
+  },
 });

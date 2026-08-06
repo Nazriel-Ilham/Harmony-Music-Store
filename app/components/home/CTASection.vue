@@ -2,7 +2,7 @@
 
 <template>
   <section
-    class="bg-gradient-to-r from-blue-700 to-indigo-700 py-20 text-white"
+    class="relative z-30 bg-gradient-to-r from-blue-700 to-indigo-700 py-20 text-white"
   >
     <div class="mx-auto max-w-5xl px-6 text-center">
       <h2 class="text-4xl font-bold">Siap Bermusik Bersama Kami?</h2>
@@ -15,14 +15,14 @@
       <div class="mt-10 flex flex-col justify-center gap-5 sm:flex-row">
         <NuxtLink
           to="/produk"
-          class="rounded-xl bg-yellow-400 px-8 py-4 font-semibold text-black transition hover:bg-yellow-300"
+          class="inline-block cursor-pointer rounded-xl bg-yellow-400 px-8 py-4 font-semibold text-black transition hover:bg-yellow-300"
         >
           Belanja Sekarang
         </NuxtLink>
 
         <NuxtLink
           to="/jual"
-          class="rounded-xl border border-white px-8 py-4 font-semibold transition hover:bg-white hover:text-blue-700"
+          class="inline-block cursor-pointer rounded-xl border border-white px-8 py-4 font-semibold transition hover:bg-white hover:text-blue-700"
         >
           Jual Alat Musik
         </NuxtLink>

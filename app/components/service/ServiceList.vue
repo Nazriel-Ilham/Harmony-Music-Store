@@ -1,86 +1,57 @@
 <script setup>
-const services = [
-  {
-    icon: "🎸",
-    title: "Servis Gitar",
-    description:
-      "Setup, cleaning, penggantian senar, fret polishing, serta perbaikan gitar akustik maupun elektrik.",
-    whatsapp: "https://wa.me/6288210490879",
-  },
-  {
-    icon: "🎹",
-    title: "Servis Keyboard",
-    description:
-      "Perbaikan tuts, cleaning, pengecekan elektronik, dan penggantian komponen keyboard.",
-    whatsapp: "https://wa.me/6288210490879",
-  },
-  {
-    icon: "🥁",
-    title: "Servis Drum",
-    description:
-      "Penggantian drum head, tuning, cleaning, serta pengecekan hardware drum.",
-    whatsapp: "https://wa.me/6288210490879",
-  },
-  {
-    icon: "🎻",
-    title: "Servis Biola",
-    description:
-      "Setup bridge, bow, penggantian senar, cleaning, dan tuning biola.",
-    whatsapp: "https://wa.me/6288210490879",
-  },
-];
+import { ref, onMounted } from "vue";
 
-const createWhatsAppLink = (service) => {
-  const message = `Permisi Harmony Music Store,
+const client = useSupabaseClient();
+const services = ref([]);
+const loading = ref(true);
 
-Saya ingin melakukan ${service}.
+const fetchServices = async () => {
+  try {
+    loading.value = true;
+    const { data, error } = await client.from("services").select("*");
 
-Nama Alat Musik :
-Merek/Tipe :
-Keluhan :
-
-Terima kasih.`;
-
-  return `https://wa.me/6288210490879?text=${encodeURIComponent(message)}`;
+    if (error) throw error;
+    services.value = data || [];
+  } catch (err) {
+    console.error("Gagal mengambil data layanan servis:", err.message);
+  } finally {
+    loading.value = false;
+  }
 };
+
+onMounted(() => {
+  fetchServices();
+});
 </script>
 
 <template>
   <section class="bg-white py-20">
     <div class="mx-auto max-w-7xl px-6">
-      <div class="text-center">
-        <h2 class="text-4xl font-bold">Layanan Servis</h2>
+      <h2 class="text-center text-4xl font-bold">Layanan Servis</h2>
 
-        <p class="mt-4 text-lg text-gray-600">
-          Percayakan perawatan alat musik Anda kepada teknisi kami.
-        </p>
-      </div>
+      <p class="mt-3 text-center text-gray-500">
+        Percayakan perawatan dan perbaikan alat musik Anda kepada teknisi
+        berpengalaman kami.
+      </p>
 
-      <div class="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+      <div class="mt-12">
+        <div v-if="loading" class="text-center py-8 text-gray-500">
+          Memuat daftar layanan...
+        </div>
+
         <div
-          v-for="service in services"
-          :key="service.title"
-          class="rounded-2xl bg-white p-8 shadow transition hover:-translate-y-2 hover:shadow-xl"
+          v-else-if="services.length > 0"
+          class="grid gap-8 md:grid-cols-2 lg:grid-cols-4"
         >
-          <div class="text-6xl">
-            {{ service.icon }}
-          </div>
+          <ServiceCard
+            v-for="service in services"
+            :key="service.id"
+            :service="service"
+          />
+        </div>
 
-          <h3 class="mt-6 text-2xl font-bold">
-            {{ service.title }}
-          </h3>
-
-          <p class="mt-4 leading-7 text-gray-600">
-            {{ service.description }}
-          </p>
-
-          <a
-            :href="createWhatsAppLink(service.title)"
-            target="_blank"
-            class="mt-8 block rounded-xl bg-green-500 py-3 text-center font-semibold text-white transition hover:bg-green-600"
-          >
-            Hubungi via WhatsApp
-          </a>
+        <div v-else class="text-center py-8 text-gray-500">
+          Belum ada layanan servis yang tersedia.
         </div>
       </div>
     </div>

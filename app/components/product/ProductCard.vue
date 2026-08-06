@@ -1,7 +1,17 @@
 <script setup>
 defineProps({
-  product: Object,
+  product: {
+    type: Object,
+    required: true,
+  },
 });
+
+// Mengakses cart composable untuk fungsi tombol
+const { addToCart } = useCart();
+
+const handleAddToCart = (product) => {
+  addToCart(product);
+};
 </script>
 
 <template>
@@ -9,8 +19,9 @@ defineProps({
     :to="`/produk/${product.id}`"
     class="block overflow-hidden rounded-2xl bg-white shadow-md transition duration-300 hover:-translate-y-2 hover:shadow-xl"
   >
+    <!-- Perbaikan 1: Mendukung image_url dari Supabase & fallback jika gambar kosong -->
     <img
-      :src="product.image"
+      :src="product.image_url || product.image || '/placeholder.png'"
       :alt="product.name"
       class="h-64 w-full object-cover"
     />
@@ -24,13 +35,16 @@ defineProps({
         {{ product.name }}
       </h3>
 
+      <!-- Perbaikan 2: Aman dari error jika price null/undefined -->
       <p class="mt-2 text-2xl font-bold text-blue-700">
-        Rp {{ product.price.toLocaleString("id-ID") }}
+        Rp {{ Number(product.price || 0).toLocaleString("id-ID") }}
       </p>
 
-      <div class="mt-4 flex text-yellow-400 text-lg">★★★★★</div>
+      <div class="mt-4 flex text-lg text-yellow-400">★★★★★</div>
 
+      <!-- Perbaikan 3: Added @click.stop.prevent agar tombol keranjang tidak membuka halaman detail -->
       <button
+        @click.stop.prevent="handleAddToCart(product)"
         class="mt-6 w-full rounded-xl bg-blue-700 py-3 font-semibold text-white transition hover:bg-blue-800"
       >
         Tambah ke Keranjang

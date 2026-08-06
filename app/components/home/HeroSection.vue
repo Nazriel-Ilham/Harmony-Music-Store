@@ -28,18 +28,21 @@
         </p>
 
         <!-- Button -->
-        <div class="mt-10 flex flex-wrap gap-5">
-          <button
-            class="rounded-xl bg-yellow-400 px-8 py-4 font-semibold text-black transition hover:scale-105 hover:bg-yellow-300"
+        <div class="mt-10 flex flex-wrap gap-5 relative z-30">
+          <!-- Mengarahkan langsung ke ID produk-section -->
+          <NuxtLink
+            to="/produk"
+            class="inline-block cursor-pointer rounded-xl bg-yellow-400 px-8 py-4 font-semibold text-black transition hover:bg-yellow-300"
           >
             Belanja Sekarang
-          </button>
+          </NuxtLink>
 
-          <button
-            class="rounded-xl border border-white px-8 py-4 font-semibold transition hover:bg-white hover:text-blue-900"
+          <NuxtLink
+            to="/jual"
+            class="inline-block cursor-pointer rounded-xl border border-white px-8 py-4 font-semibold text-white transition hover:scale-105 hover:bg-white hover:text-blue-900"
           >
             Jual Alat Musik
-          </button>
+          </NuxtLink>
         </div>
 
         <!-- Statistics -->

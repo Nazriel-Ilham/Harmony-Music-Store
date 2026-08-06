@@ -12,7 +12,7 @@ const emit = defineEmits(["increase", "decrease", "remove"]);
 <template>
   <div class="flex items-center gap-6 rounded-2xl bg-white p-6 shadow-sm">
     <img
-      :src="product.image"
+      :src="product.image_url || product.image || '/placeholder.png'"
       :alt="product.name"
       class="h-28 w-28 object-contain"
     />
