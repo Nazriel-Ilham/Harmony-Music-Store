@@ -1,10 +1,80 @@
 <script setup>
+import { ref, watch, onMounted } from "vue";
+
 const supabase = useSupabaseClient();
+const user = useSupabaseUser();
 const orders = ref([]);
 const pending = ref(true);
 
+// Helper Format Tanggal
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+// Helper Gambar Produk (Mengambil dari tabel products)
+const getProductImage = (item) => {
+  return (
+    item.products?.image_url ||
+    item.products?.image ||
+    "https://via.placeholder.com/150"
+  );
+};
+
+// Fungsi Membatalkan Pesanan: LANGSUNG HAPUS DARI DATABASE
+const cancelOrder = async (orderId) => {
+  if (
+    !confirm("Apakah Anda yakin ingin membatalkan dan menghapus pesanan ini?")
+  )
+    return;
+
+  try {
+    // 1. Hapus item terkait di order_items
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("order_id", orderId);
+
+    if (itemsError) throw itemsError;
+
+    // 2. Hapus data utama di orders
+    const { error: orderError } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", orderId);
+
+    if (orderError) throw orderError;
+
+    alert("Pesanan berhasil dihapus.");
+    await fetchOrders();
+  } catch (err) {
+    alert("Gagal membatalkan pesanan: " + err.message);
+  }
+};
+
 const fetchOrders = async () => {
   pending.value = true;
+
+  // 1. Ambil session user aktif
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const activeUserId = session?.user?.id || user.value?.id;
+
+  if (!activeUserId) {
+    orders.value = [];
+    pending.value = false;
+    return;
+  }
+
+  // 2. Query Tanpa image_url di order_items (Kodingan Asli Kamu)
   const { data, error } = await supabase
     .from("orders")
     .select(
@@ -17,51 +87,41 @@ const fetchOrders = async () => {
         id,
         quantity,
         price,
+        product_id,
         products (
+          id,
           name,
-          image_url
+          image_url,
+          image
         )
       )
     `,
     )
+    .eq("user_id", activeUserId)
     .order("created_at", { ascending: false });
 
-  if (!error) orders.value = data || [];
+  if (error) {
+    console.error("Gagal Ambil Data Pesanan:", error.message);
+    orders.value = [];
+  } else {
+    orders.value = data || [];
+  }
+
   pending.value = false;
 };
 
-// Fungsi membatalkan/menghapus pesanan
-const cancelOrder = async (orderId) => {
-  if (!confirm("Apakah Anda yakin ingin membatalkan pesanan ini?")) return;
-
-  // Hapus item pesanan terlebih dahulu (karena foreign key)
-  await supabase.from("order_items").delete().eq("order_id", orderId);
-
-  // Hapus header pesanan
-  const { error } = await supabase.from("orders").delete().eq("id", orderId);
-
-  if (error) {
-    alert("Gagal membatalkan pesanan: " + error.message);
-  } else {
-    alert("Pesanan berhasil dibatalkan!");
-    fetchOrders(); // Refresh data
-  }
-};
+// Re-fetch otomatis saat status auth berubah
+watch(
+  user,
+  () => {
+    fetchOrders();
+  },
+  { immediate: true },
+);
 
 onMounted(() => {
   fetchOrders();
 });
-
-const formatDate = (dateString) => {
-  if (!dateString) return "-";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 </script>
 
 <template>
@@ -96,18 +156,20 @@ const formatDate = (dateString) => {
               <span
                 class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider"
                 :class="{
-                  'bg-yellow-100 text-yellow-800': order.status === 'pending',
+                  'bg-yellow-100 text-yellow-800':
+                    order.status?.toLowerCase() === 'pending',
                   'bg-green-100 text-green-800':
-                    order.status === 'completed' || order.status === 'selesai',
-                  'bg-red-100 text-red-800': order.status === 'cancelled',
+                    order.status?.toLowerCase() === 'completed' ||
+                    order.status?.toLowerCase() === 'selesai',
+                  'bg-red-100 text-red-800':
+                    order.status?.toLowerCase() === 'cancelled',
                 }"
               >
                 {{ order.status }}
               </span>
 
-              <!-- Tombol Batalkan Pesanan (Hanya jika masih pending) -->
               <button
-                v-if="order.status === 'pending'"
+                v-if="order.status?.toLowerCase() === 'pending'"
                 @click="cancelOrder(order.id)"
                 class="text-xs text-red-600 hover:text-red-800 font-semibold border border-red-200 hover:bg-red-50 px-3 py-1 rounded-lg transition"
               >
@@ -124,11 +186,9 @@ const formatDate = (dateString) => {
               class="flex items-center gap-4"
             >
               <img
-                :src="
-                  item.products?.image_url || '/images/categories/guitar.png'
-                "
-                :alt="item.products?.name"
-                class="w-16 h-16 object-contain rounded-lg border bg-gray-50 p-2"
+                :src="getProductImage(item)"
+                :alt="item.products?.name || 'Gambar Produk'"
+                class="w-16 h-16 object-contain rounded-lg border bg-gray-50"
               />
               <div class="flex-1">
                 <h3 class="font-semibold text-gray-800">

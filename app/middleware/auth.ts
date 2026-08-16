@@ -1,8 +1,21 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
   const user = useSupabaseUser();
+  const supabase = useSupabaseClient() as any;
 
-  // Jika mencoba akses selain /login dan /register saat belum login
-  if (!user.value && to.path !== "/login" && to.path !== "/register") {
+  if (!user.value) {
     return navigateTo("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.value.id)
+    .single();
+
+  const userRole = profile?.role || "user";
+
+  // Proteksi Halaman Admin: Hanya bisa dibuka oleh role 'admin'
+  if (to.path.startsWith("/admin") && userRole !== "admin") {
+    return navigateTo("/");
   }
 });
